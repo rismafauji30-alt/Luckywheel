@@ -1,0 +1,21 @@
+CARA MEMBUAT APK LUCKY WHEEL DARI HP ANDROID
+
+1. Buka https://github.com dan buat akun atau masuk.
+2. Tekan tanda + lalu pilih New repository.
+3. Beri nama: LuckyWheel
+4. Pilih Public atau Private, lalu Create repository.
+5. Di halaman repository, pilih Add file > Upload files.
+6. Ekstrak ZIP proyek ini dahulu dengan aplikasi pengelola file/ZIP di HP.
+7. Upload SEMUA isi folder LuckyWheelAndroid ke repository GitHub.
+   PENTING: ikut sertakan folder tersembunyi .github beserta workflows/build-apk.yml.
+8. Tekan Commit changes.
+9. Buka tab Actions di repository.
+10. Pilih workflow "Build Lucky Wheel APK" lalu tekan Run workflow.
+11. Tunggu sampai proses selesai dengan tanda centang hijau.
+12. Buka hasil workflow yang selesai, gulir ke bagian Artifacts.
+13. Download "LuckyWheel-debug-APK", ekstrak ZIP hasil download, lalu buka app-debug.apk.
+14. Jika Android meminta izin, izinkan instalasi aplikasi dari sumber tersebut hanya untuk browser/pengelola file yang kamu gunakan.
+
+Catatan:
+- APK ini adalah debug APK untuk dipasang dan dicoba di HP, bukan APK rilis Play Store.
+- Jangan membagikan password GitHub atau kode verifikasi kepada siapa pun.
