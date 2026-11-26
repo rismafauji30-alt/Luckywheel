@@ -1,43 +1,239 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lucky Wheel Arisan</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#7624c8,#280747 75%);color:white;font-family:system-ui,Arial,sans-serif;display:flex;justify-content:center;padding:24px 12px}
-main{width:min(100%,480px);text-align:center}.heading{font-size:30px;font-weight:900;color:#ffdc75;text-shadow:0 3px #7a3b16;margin:8px 0 18px}
-.wrap{position:relative;width:min(88vw,390px);aspect-ratio:1;margin:0 auto 22px}.pointer{position:absolute;z-index:2;top:-5px;left:50%;transform:translateX(-50%);border-left:18px solid transparent;border-right:18px solid transparent;border-top:40px solid #ffe27a;filter:drop-shadow(0 2px 3px #24063d)}
-canvas{width:100%;height:100%}.spin{background:linear-gradient(#a2f76e,#20a936);color:white;padding:16px 40px;border:0;border-radius:50px;font-size:23px;font-weight:900;box-shadow:0 5px #176c28;cursor:pointer}.spin:disabled{opacity:.7}
-.result{background:#f4e5ff;color:#6516a2;border:2px solid #d6a2ff;border-radius:14px;padding:13px;margin:22px 0;font-weight:800}.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}button.secondary{background:#7130bd;color:white;border:0;border-radius:30px;padding:10px 18px;font-weight:800;cursor:pointer}
-.names{margin:16px 0;padding:14px;background:#542080;border-radius:14px;text-align:left;line-height:1.8}.note{font-size:12px;opacity:.8;margin-top:18px}
-</style></head>
-<body><main>
-<div class="heading">✨ ARISAN BULANAN ✨</div>
-<div>11 peserta · Roda klasik</div>
-<div class="wrap"><div class="pointer"></div><canvas id="wheel" width="720" height="720"></canvas></div>
-<button class="spin" id="spin">✨ PUTAR ✨</button>
-<div class="result" id="result"></div>
-<div class="controls"><button class="secondary" id="reset">↻ Ulangi</button><button class="secondary" id="toggle">☷ Daftar nama</button></div>
-<div class="names" id="names" hidden><b>Daftar peserta</b><ol id="list"></ol></div>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:linear-gradient(145deg,#ffe4ef,#fff0f5,#f8e7ff);
+ color:#873d65;
+ text-align:center;
+ padding:20px 14px;
+}
+h1{color:#d64f91;margin:10px 0}
+.subtitle{color:#a66b89;font-size:14px}
+.card{
+ background:#ffffffd9;
+ padding:18px;
+ border-radius:24px;
+ margin:18px auto;
+ max-width:450px;
+ box-shadow:0 8px 25px #d78bb52b;
+}
+canvas{
+ width:100%;
+ max-width:340px;
+ height:auto;
+}
+.pointer{
+ font-size:35px;
+ margin-bottom:-12px;
+ position:relative;
+ z-index:2;
+}
+textarea{
+ width:100%;
+ height:110px;
+ border:2px solid #f4bdd7;
+ border-radius:15px;
+ padding:12px;
+ font-size:15px;
+ outline:none;
+ resize:vertical;
+ color:#873d65;
+ background:#fff8fb;
+}
+button{
+ border:0;
+ border-radius:30px;
+ padding:13px 22px;
+ margin:6px;
+ font-weight:bold;
+ font-size:15px;
+ cursor:pointer;
+}
+.spin{
+ background:linear-gradient(135deg,#ff77b7,#df4b98);
+ color:white;
+ font-size:21px;
+ padding:16px 48px;
+ box-shadow:0 5px 15px #e68bb9;
+}
+.secondary{background:#f9d5e7;color:#98456f}
+#winner{
+ font-size:22px;
+ font-weight:bold;
+ color:#dc4a91;
+ margin:15px;
+}
+.small{font-size:12px;color:#b17b98}
+</style>
+</head>
+<body>
 
-</main>
+<h1>🎀 Lucky Wheel 🎀</h1>
+<div class="subtitle">Putar roda, tentukan pemenang arisan!</div>
+
+<div class="card">
+<h3>💗 Daftar Peserta</h3>
+<textarea id="names" placeholder="Masukkan nama peserta, satu nama setiap baris">Ani
+Budi
+Citra
+Dewi
+Eka
+Fani</textarea>
+<br>
+<button class="secondary" onclick="updateWheel()">Perbarui Peserta</button>
+</div>
+
+<div class="card">
+<div class="pointer">▼</div>
+<canvas id="wheel" width="600" height="600"></canvas>
+<br>
+<button class="spin" id="spin" onclick="spinWheel()">SPIN 🎡</button>
+<div id="winner">Siapa yang beruntung? 💕</div>
+<div class="small">Semoga beruntung!</div>
+</div>
+
+<div class="card">
+<h3>🏆 Riwayat Pemenang</h3>
+<div id="history">Belum ada pemenang</div>
+<button class="secondary" onclick="resetHistory()">Hapus Riwayat</button>
+</div>
+
 <script>
-const names=['Hildan','M. Arsyad','Pak Eko','Caca','Amel','Aluna','Cahya','Evi','Alifta','Teh Nay','Hari'];
-const winners=['Aluna','Teh Nay','Cahya','Caca'];
-let winnerTurn=0;
-const colors=['#38c9a3','#ed668e','#ed923b','#ffca49','#83d94c','#25b7a4','#43a7df','#6663dc','#a74fe0','#e95bb4','#70dbb9'];
-const c=document.getElementById('wheel'),ctx=c.getContext('2d'),cx=360,cy=360,r=322,step=2*Math.PI/names.length;
-let angle=0,busy=false;
-function draw(){ctx.clearRect(0,0,720,720);ctx.save();ctx.translate(cx,cy);
-ctx.beginPath();ctx.arc(0,0,r+13,0,Math.PI*2);ctx.fillStyle='#f6d77b';ctx.fill();
-ctx.beginPath();ctx.arc(0,0,r+5,0,Math.PI*2);ctx.fillStyle='#7131bd';ctx.fill();
-names.forEach((name,i)=>{let a=angle+i*step-Math.PI/2;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,a,a+step);ctx.closePath();ctx.fillStyle=colors[i];ctx.fill();ctx.strokeStyle='#fff5c9';ctx.lineWidth=3;ctx.stroke();ctx.save();ctx.rotate(a+step/2);ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillStyle='#fff';ctx.font='bold 24px system-ui';ctx.shadowColor='#38104f';ctx.shadowBlur=4;ctx.fillText(name,r-22,0);ctx.restore();});
-ctx.beginPath();ctx.arc(0,0,51,0,Math.PI*2);ctx.fillStyle='#792be0';ctx.fill();ctx.lineWidth=7;ctx.strokeStyle='#ffdc7c';ctx.stroke();ctx.fillStyle='white';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 32px system-ui';ctx.fillText('✦',0,1);ctx.restore();
-for(let i=0;i<22;i++){let a=i*Math.PI*2/22;ctx.beginPath();ctx.arc(cx+Math.cos(a)*(r+8),cy+Math.sin(a)*(r+8),7,0,Math.PI*2);ctx.fillStyle='#ffe28a';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}}
-function spin(){if(busy)return;busy=true;const btn=document.getElementById('spin');btn.disabled=true;btn.textContent='✨ BERPUTAR...';const winner=winners[winnerTurn % winners.length];const target=names.indexOf(winner),targetAngle=-(target*step+step/2),current=((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI),desired=((targetAngle-current)%(2*Math.PI)+2*Math.PI)%(2*Math.PI),start=angle,extra=8*Math.PI+desired,duration=4800,t0=performance.now();
-function frame(t){let p=Math.min(1,(t-t0)/duration),ease=1-Math.pow(1-p,4);angle=start+extra*ease;draw();if(p<1)requestAnimationFrame(frame);else{busy=false;angle=start+extra;draw();document.getElementById('result').innerHTML='🎉 PEMENANG 🎉<br><span style="font-size:30px">'+winner.toUpperCase()+' ❤️</span>';winnerTurn++;btn.disabled=false;btn.textContent='✨ PUTAR LAGI ✨';}}requestAnimationFrame(frame);}
-document.getElementById('spin').onclick=spin;
-document.getElementById('reset').onclick=()=>{if(busy)return;angle=0;draw();document.getElementById('result').innerHTML='';document.getElementById('spin').textContent='✨ PUTAR ✨';};
-document.getElementById('toggle').onclick=()=>{document.getElementById('names').hidden=!document.getElementById('names').hidden;};
-document.getElementById('list').innerHTML=names.map(n=>'<li>'+n+'</li>').join('');draw();
-</script></body></html>
+const canvas=document.getElementById("wheel");
+const ctx=canvas.getContext("2d");
+const colors=["#ff9fc8","#ffc6dc","#d9b9f5","#ffe0a8","#f6a9b9","#c9b8f0"];
+let names=["Ani","Budi","Citra","Dewi","Eka","Fani"];
+let angle=0;
+let spinning=false;
+let audio=null;
+let lastTick=-1;
+let history=[];
+
+function sound(){
+ if(!audio) audio=new(window.AudioContext||window.webkitAudioContext)();
+ if(audio.state==="suspended")audio.resume();
+}
+function tone(freq,duration,type="sine",volume=.07){
+ sound();
+ const osc=audio.createOscillator();
+ const gain=audio.createGain();
+ osc.type=type;
+ osc.frequency.value=freq;
+ gain.gain.setValueAtTime(volume,audio.currentTime);
+ gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);
+ osc.connect(gain);
+ gain.connect(audio.destination);
+ osc.start();
+ osc.stop(audio.currentTime+duration);
+}
+function updateWheel(){
+ const value=document.getElementById("names").value;
+ names=value.split("\n").map(x=>x.trim()).filter(Boolean);
+ if(names.length<2){
+ alert("Masukkan minimal 2 nama peserta!");
+ names=["Ani","Budi"];
+ return;
+ }
+ angle=0;
+ drawWheel();
+ document.getElementById("winner").textContent="Siapa yang beruntung? 💕";
+}
+function drawWheel(){
+ const n=names.length;
+ const arc=Math.PI*2/n;
+ ctx.clearRect(0,0,600,600);
+ names.forEach((name,i)=>{
+  const start=angle+i*arc-Math.PI/2;
+  const end=start+arc;
+  ctx.beginPath();
+  ctx.moveTo(300,300);
+  ctx.arc(300,300,280,start,end);
+  ctx.closePath();
+  ctx.fillStyle=colors[i%colors.length];
+  ctx.fill();
+  ctx.strokeStyle="#fff";
+  ctx.lineWidth=5;
+  ctx.stroke();
+  ctx.save();
+  ctx.translate(300,300);
+  ctx.rotate(start+arc/2);
+  ctx.textAlign="right";
+  ctx.fillStyle="#783653";
+  ctx.font="bold 22px Arial";
+  ctx.fillText(name,255,8,220);
+  ctx.restore();
+ });
+ ctx.beginPath();
+ ctx.arc(300,300,43,0,Math.PI*2);
+ ctx.fillStyle="#fff5fa";
+ ctx.fill();
+ ctx.strokeStyle="#f18bb9";
+ ctx.lineWidth=6;
+ ctx.stroke();
+ ctx.fillStyle="#df5a9b";
+ ctx.font="bold 22px Arial";
+ ctx.textAlign="center";
+ ctx.fillText("♥",300,308);
+}
+function spinWheel(){
+ if(spinning)return;
+ updateWheel();
+ if(names.length<2)return;
+ sound();
+ spinning=true;
+ document.getElementById("spin").disabled=true;
+ document.getElementById("winner").textContent="Semoga beruntung! 💗";
+ const start=angle;
+ const extra=Math.PI*2*(5+Math.random()*4)+Math.random()*Math.PI*2;
+ const duration=5500;
+ const startTime=performance.now();
+ lastTick=-1;
+ function animate(now){
+  const t=Math.min((now-startTime)/duration,1);
+  const ease=1-Math.pow(1-t,4);
+  angle=start+extra*ease;
+  drawWheel();
+  const tick=Math.floor(angle/(Math.PI*2/names.length)*2);
+  if(tick!==lastTick){
+   tone(700,.035,"square",.025);
+   lastTick=tick;
+  }
+  if(t<1){
+   requestAnimationFrame(animate);
+  }else{
+   spinning=false;
+   document.getElementById("spin").disabled=false;
+   const arc=Math.PI*2/names.length;
+   let index=Math.floor((Math.PI*1.5-angle%(Math.PI*2)+Math.PI*2)%(Math.PI*2)/arc);
+   const winner=names[index];
+   document.getElementById("winner").textContent="🎉 PEMENANG: "+winner+" 🎉";
+   history.unshift(winner);
+   showHistory();
+   tone(523,.3);
+   setTimeout(()=>tone(659,.3),180);
+   setTimeout(()=>tone(784,.5),360);
+  }
+ }
+ requestAnimationFrame(animate);
+}
+function showHistory(){
+ document.getElementById("history").innerHTML=history.length?
+ history.map((n,i)=>`${i+1}. 🏆 ${n}`).join("<br>"):
+ "Belum ada pemenang";
+}
+function resetHistory(){
+ history=[];
+ showHistory();
+}
+drawWheel();
+</script>
+</body>
+</html>
