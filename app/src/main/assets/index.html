@@ -337,3 +337,30 @@ function spinWheel(){
 
  requestAnimationFrame(animate);
 }
+let remaining=10;
+   countdownTimer=setInterval(()=>{
+    remaining--;
+
+    if(remaining>0){
+     document.getElementById("countdown").textContent=
+      "Nama akan dihapus dalam "+remaining+" detik";
+    }else{
+     clearInterval(countdownTimer);
+
+     participants=participants.filter(name=>name!==winner);
+     updateInfo();
+
+     document.getElementById("countdown").textContent=
+      "Siap untuk putaran berikutnya 💗";
+
+     spinBtn.disabled=false;
+    }
+   },1000);
+  }
+ }
+
+ requestAnimationFrame(animate);
+}
+</script>
+</body>
+</html>
