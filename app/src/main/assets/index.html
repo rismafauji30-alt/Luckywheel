@@ -68,7 +68,7 @@ textarea{
  <button class="spin" id="spin" onclick="spinWheel()">PUTAR ✨</button>
  <div id="winner">Siapakah pemenang berikutnya? 💗</div>
  <div id="remaining">Sisa peserta: 11</div>
-
+ <div id="status">Siap memulai arisan 💗</div>
 </div>
 
 <div class="card">
@@ -214,22 +214,32 @@ function applyNames(){
 
  if(list.length<3){
   alert("Masukkan minimal 3 nama!");
+  document.getElementById("names").value=participants.join("\n");
   return;
  }
 
  if(new Set(list).size!==list.length){
   alert("Ada nama yang sama!");
+  document.getElementById("names").value=participants.join("\n");
   return;
  }
 
- const blocked=[...fixedWinners.slice(0,winnerCount),...winnersHistory];
-
- if(blocked.some(name=>list.includes(name))){
+ if(winnersHistory.some(name=>list.includes(name))){
   alert("Nama yang sudah menang tidak boleh dimasukkan kembali!");
+  document.getElementById("names").value=participants.join("\n");
   return;
  }
 
- participants=list.filter(name=>!winnersHistory.includes(name));
+ const remainingFixed=fixedWinners.slice(winnerCount,3);
+ const missing=remainingFixed.filter(name=>!list.includes(name));
+
+ if(missing.length){
+  alert("Pemenang berikutnya tidak boleh dihapus: "+missing.join(", "));
+  document.getElementById("names").value=participants.join("\n");
+  return;
+ }
+
+ participants=list;
 
  drawWheel();
  updateInfo();
