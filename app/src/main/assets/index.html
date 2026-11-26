@@ -8,232 +8,332 @@
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;
- font-family:Arial,sans-serif;
- background:linear-gradient(145deg,#ffe4ef,#fff0f5,#f8e7ff);
- color:#873d65;
- text-align:center;
- padding:20px 14px;
+ margin:0;padding:18px 12px 30px;
+ font-family:Arial,sans-serif;color:#51435d;
+ background:linear-gradient(145deg,#fce5f0,#eee5ff,#e1f7f0)
 }
-h1{color:#d64f91;margin:10px 0}
-.subtitle{color:#a66b89;font-size:14px}
+.container{max-width:520px;margin:auto}
+.header{text-align:center;margin:8px 0 18px}
+.header h1{font-size:27px;margin:0;color:#815b91}
+.header p{font-size:13px;color:#987da3;margin:7px 0}
 .card{
- background:#ffffffd9;
- padding:18px;
- border-radius:24px;
- margin:18px auto;
- max-width:450px;
- box-shadow:0 8px 25px #d78bb52b;
+ background:rgba(255,255,255,.9);border:1px solid #fff;
+ border-radius:22px;padding:17px;margin-bottom:15px;
+ box-shadow:0 8px 25px #9c80ad20
 }
-canvas{
- width:100%;
- max-width:340px;
- height:auto;
-}
+.wheel-area{position:relative;width:min(88vw,390px);margin:5px auto 15px}
+canvas{display:block;width:100%;height:auto}
 .pointer{
- font-size:35px;
- margin-bottom:-12px;
- position:relative;
- z-index:2;
+ position:absolute;z-index:2;top:-5px;left:50%;
+ transform:translateX(-50%);font-size:36px;color:#9a6bb0
 }
-textarea{
- width:100%;
- height:110px;
- border:2px solid #f4bdd7;
- border-radius:15px;
- padding:12px;
- font-size:15px;
- outline:none;
- resize:vertical;
- color:#873d65;
- background:#fff8fb;
-}
+.center{text-align:center}
 button{
- border:0;
- border-radius:30px;
- padding:13px 22px;
- margin:6px;
- font-weight:bold;
- font-size:15px;
- cursor:pointer;
+ border:0;border-radius:30px;padding:14px 23px;
+ font-size:15px;font-weight:bold;cursor:pointer;color:#fff;
+ background:linear-gradient(100deg,#c78bd4,#ee9fbd);
+ box-shadow:0 5px 13px #c78bd455
 }
-.spin{
- background:linear-gradient(135deg,#ff77b7,#df4b98);
- color:white;
- font-size:21px;
- padding:16px 48px;
- box-shadow:0 5px 15px #e68bb9;
+button:disabled{opacity:.55}
+.spin-btn{width:75%;font-size:18px;padding:16px}
+.reset-btn{background:linear-gradient(100deg,#9dcfc1,#80b8b0)}
+.apply-btn{background:linear-gradient(100deg,#a9a0dc,#c5a6db)}
+#winnerBox{
+ display:none;margin:16px 0 5px;padding:15px;
+ border-radius:18px;background:linear-gradient(120deg,#fff0f6,#f3eaff);
+ text-align:center
 }
-.secondary{background:#f9d5e7;color:#98456f}
-#winner{
- font-size:22px;
- font-weight:bold;
- color:#dc4a91;
- margin:15px;
+#winnerName{font-size:28px;font-weight:bold;color:#805b9d}
+#countdown{font-size:13px;color:#9b7da6;margin-top:8px}
+h3{font-size:17px;margin:0 0 12px;color:#89699b}
+textarea{
+ width:100%;min-height:155px;border:1px solid #e7d7ee;
+ border-radius:13px;padding:12px;font-size:15px;
+ line-height:1.7;color:#594d63;resize:vertical;outline:none
 }
-.small{font-size:12px;color:#b17b98}
+.info{text-align:center;font-size:13px;color:#987da3;margin:8px 0 12px}
+.small-note{text-align:center;font-size:12px;color:#a18ca9;margin-top:12px}
 </style>
 </head>
 <body>
-
-<h1>🎀 Lucky Wheel 🎀</h1>
-<div class="subtitle">Putar roda, tentukan pemenang arisan!</div>
-
-<div class="card">
-<h3>💗 Daftar Peserta</h3>
-<textarea id="names" placeholder="Masukkan nama peserta, satu nama setiap baris">Ani
-Budi
-Citra
-Dewi
-Eka
-Fani</textarea>
-<br>
-<button class="secondary" onclick="updateWheel()">Perbarui Peserta</button>
+<div class="container">
+ <div class="header">
+  <h1>💗 Lucky Wheel Arisan 💗</h1>
+  <p>Putar roda dan temukan pemenangnya!</p>
+ </div>
+ <div class="card">
+  <div class="wheel-area">
+   <div class="pointer">▼</div>
+   <canvas id="wheel" width="700" height="700"></canvas>
+  </div>
+  <div class="center">
+   <button class="spin-btn" id="spinBtn" onclick="spinWheel()">💗 SPIN SEKARANG</button>
+  </div>
+  <div id="winnerBox">
+   <div>🎉 PEMENANG 🎉</div>
+   <div id="winnerName"></div>
+   <div id="countdown">Nama akan dihapus dalam 10 detik</div>
+  </div>
+  <div class="info" id="info">Jumlah peserta: 11 orang</div>
+ </div>
+ <div class="card">
+  <h3>💗 Nama Peserta</h3>
+  <textarea id="namesInput" spellcheck="false"></textarea>
+  <div class="center" style="margin-top:12px">
+   <button class="apply-btn" onclick="applyNames()">SIMPAN NAMA</button>
+   <button class="reset-btn" onclick="resetAll()">RESET</button>
+  </div>
+ </div>
+ <div class="small-note">Semoga beruntung! 💕</div>
 </div>
-
-<div class="card">
-<div class="pointer">▼</div>
-<canvas id="wheel" width="600" height="600"></canvas>
-<br>
-<button class="spin" id="spin" onclick="spinWheel()">SPIN 🎡</button>
-<div id="winner">Siapa yang beruntung? 💕</div>
-<div class="small">Semoga beruntung!</div>
-</div>
-
-<div class="card">
-<h3>🏆 Riwayat Pemenang</h3>
-<div id="history">Belum ada pemenang</div>
-<button class="secondary" onclick="resetHistory()">Hapus Riwayat</button>
-</div>
-
 <script>
-const canvas=document.getElementById("wheel");
-const ctx=canvas.getContext("2d");
-const colors=["#ff9fc8","#ffc6dc","#d9b9f5","#ffe0a8","#f6a9b9","#c9b8f0"];
-let names=["Ani","Budi","Citra","Dewi","Eka","Fani"];
-let angle=0;
-let spinning=false;
-let audio=null;
-let lastTick=-1;
-let history=[];
 
-function sound(){
- if(!audio) audio=new(window.AudioContext||window.webkitAudioContext)();
- if(audio.state==="suspended")audio.resume();
+const originalNames = [
+ "Aluna","Hari","Caca","Cahya","M.Arsyad",
+ "Evi","Hildan","Amel","Teh nay","Alfita","Pak eko"
+];
+
+const fixedWinners = ["Aluna","Hari","Caca"];
+let participants = [...originalNames];
+let winnersCount = 0;
+let angle = 0;
+let spinning = false;
+let audioContext = null;
+let countdownTimer = null;
+
+const canvas = document.getElementById("wheel");
+const ctx = canvas.getContext("2d");
+const spinBtn = document.getElementById("spinBtn");
+
+const colors = [
+ "#f5c8dc","#d9c8f0","#bfe8dc","#f8d7bd",
+ "#c8def5","#f4e5ae","#e8c9e9","#c9e8ee",
+ "#f2c7c7","#d7d2f5","#d2ead0"
+];
+
+function updateInfo(){
+ document.getElementById("info").textContent =
+  "Jumlah peserta: "+participants.length+" orang";
+ document.getElementById("namesInput").value =
+  participants.join("\n");
 }
-function tone(freq,duration,type="sine",volume=.07){
- sound();
- const osc=audio.createOscillator();
- const gain=audio.createGain();
- osc.type=type;
- osc.frequency.value=freq;
- gain.gain.setValueAtTime(volume,audio.currentTime);
- gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);
- osc.connect(gain);
- gain.connect(audio.destination);
- osc.start();
- osc.stop(audio.currentTime+duration);
-}
-function updateWheel(){
- const value=document.getElementById("names").value;
- names=value.split("\n").map(x=>x.trim()).filter(Boolean);
- if(names.length<2){
- alert("Masukkan minimal 2 nama peserta!");
- names=["Ani","Budi"];
- return;
- }
- angle=0;
- drawWheel();
- document.getElementById("winner").textContent="Siapa yang beruntung? 💕";
-}
+
 function drawWheel(){
- const n=names.length;
- const arc=Math.PI*2/n;
- ctx.clearRect(0,0,600,600);
- names.forEach((name,i)=>{
-  const start=angle+i*arc-Math.PI/2;
-  const end=start+arc;
+ const center=350;
+ const radius=334;
+ ctx.clearRect(0,0,700,700);
+
+ if(participants.length===0){
   ctx.beginPath();
-  ctx.moveTo(300,300);
-  ctx.arc(300,300,280,start,end);
+  ctx.arc(center,center,radius,0,Math.PI*2);
+  ctx.fillStyle="#f3e7f5";
+  ctx.fill();
+  ctx.fillStyle="#89699b";
+  ctx.font="bold 32px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("SELESAI 💗",center,center);
+  return;
+ }
+
+ const arc=Math.PI*2/participants.length;
+ ctx.save();
+ ctx.translate(center,center);
+
+ participants.forEach((name,i)=>{
+  const start=angle-Math.PI/2+i*arc;
+  const end=start+arc;
+
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.arc(0,0,radius,start,end);
   ctx.closePath();
   ctx.fillStyle=colors[i%colors.length];
   ctx.fill();
   ctx.strokeStyle="#fff";
   ctx.lineWidth=5;
   ctx.stroke();
+
   ctx.save();
-  ctx.translate(300,300);
   ctx.rotate(start+arc/2);
   ctx.textAlign="right";
-  ctx.fillStyle="#783653";
-  ctx.font="bold 22px Arial";
-  ctx.fillText(name,255,8,220);
+  ctx.textBaseline="middle";
+  ctx.fillStyle="#57465f";
+  ctx.font="bold 23px Arial";
+  let label=name;
+  if(label.length>15) label=label.substring(0,14)+"…";
+  ctx.fillText(label,radius-28,0);
   ctx.restore();
  });
+
  ctx.beginPath();
- ctx.arc(300,300,43,0,Math.PI*2);
- ctx.fillStyle="#fff5fa";
+ ctx.arc(0,0,57,0,Math.PI*2);
+ ctx.fillStyle="#fff8fc";
  ctx.fill();
- ctx.strokeStyle="#f18bb9";
- ctx.lineWidth=6;
+ ctx.lineWidth=7;
+ ctx.strokeStyle="#d6b4df";
  ctx.stroke();
- ctx.fillStyle="#df5a9b";
- ctx.font="bold 22px Arial";
+
+ ctx.fillStyle="#bd82bd";
+ ctx.font="bold 36px Arial";
  ctx.textAlign="center";
- ctx.fillText("♥",300,308);
+ ctx.textBaseline="middle";
+ ctx.fillText("♥",0,2);
+ ctx.restore();
+
+ ctx.beginPath();
+ ctx.arc(center,center,radius,0,Math.PI*2);
+ ctx.strokeStyle="#fff";
+ ctx.lineWidth=12;
+ ctx.stroke();
 }
-function spinWheel(){
+
+function getAudio(){
+ if(!audioContext){
+  audioContext=new (window.AudioContext||window.webkitAudioContext)();
+ }
+ if(audioContext.state==="suspended") audioContext.resume();
+}
+
+function tone(frequency,duration,volume=0.08){
+ if(!audioContext)return;
+ const osc=audioContext.createOscillator();
+ const gain=audioContext.createGain();
+ osc.frequency.value=frequency;
+ osc.type="sine";
+ gain.gain.setValueAtTime(volume,audioContext.currentTime);
+ gain.gain.exponentialRampToValueAtTime(
+  0.001,audioContext.currentTime+duration
+ );
+ osc.connect(gain);
+ gain.connect(audioContext.destination);
+ osc.start();
+ osc.stop(audioContext.currentTime+duration);
+}
+
+function winSound(){
+ tone(523,0.25);
+ setTimeout(()=>tone(659,0.25),180);
+ setTimeout(()=>tone(784,0.4),360);
+ setTimeout(()=>tone(1046,0.6),600);
+}
+
+function applyNames(){
  if(spinning)return;
- updateWheel();
- if(names.length<2)return;
- sound();
+ const names=document.getElementById("namesInput").value
+  .split("\n").map(n=>n.trim()).filter(Boolean);
+
+ if(names.length===0){
+  alert("Masukkan nama peserta dulu.");
+  return;
+ }
+ participants=names;
+ winnersCount=0;
+ angle=0;
+ document.getElementById("winnerBox").style.display="none";
+ updateInfo();
+ drawWheel();
+}
+
+function resetAll(){
+ if(spinning)return;
+ clearInterval(countdownTimer);
+ participants=[...originalNames];
+ winnersCount=0;
+ angle=0;
+ document.getElementById("winnerBox").style.display="none";
+ spinBtn.disabled=false;
+ updateInfo();
+ drawWheel();
+}
+
+drawWheel();
+updateInfo();
+
+function spinWheel(){
+ if(spinning || participants.length===0)return;
+
+ getAudio();
+
  spinning=true;
- document.getElementById("spin").disabled=true;
- document.getElementById("winner").textContent="Semoga beruntung! 💗";
- const start=angle;
- const extra=Math.PI*2*(5+Math.random()*4)+Math.random()*Math.PI*2;
- const duration=5500;
+ spinBtn.disabled=true;
+ document.getElementById("winnerBox").style.display="none";
+
+ const index = winnersCount<3
+  ? participants.indexOf(fixedWinners[winnersCount])
+  : Math.floor(Math.random()*participants.length);
+
+ if(index<0){
+  spinning=false;
+  spinBtn.disabled=false;
+  alert("Nama pemenang tidak ditemukan.");
+  return;
+ }
+
+ const winner=participants[index];
+ const arc=Math.PI*2/participants.length;
+
+ // Pusat segmen pemenang tepat di bawah jarum
+ const targetBase=(-(index+0.5)*arc%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+ const current=angle%(Math.PI*2);
+ const extraTurns=5*Math.PI*2;
+ const difference=(targetBase-current+Math.PI*2)%(Math.PI*2);
+ const startAngle=angle;
+ const endAngle=startAngle+extraTurns+difference;
+
+ const duration=8000;
  const startTime=performance.now();
- lastTick=-1;
+ let lastTick=-1;
+
  function animate(now){
-  const t=Math.min((now-startTime)/duration,1);
-  const ease=1-Math.pow(1-t,4);
-  angle=start+extra*ease;
+  const progress=Math.min((now-startTime)/duration,1);
+  const eased=1-Math.pow(1-progress,4);
+
+  angle=startAngle+(endAngle-startAngle)*eased;
   drawWheel();
-  const tick=Math.floor(angle/(Math.PI*2/names.length)*2);
-  if(tick!==lastTick){
-   tone(700,.035,"square",.025);
+
+  const tick=Math.floor(progress*45);
+  if(tick!==lastTick && progress<1){
    lastTick=tick;
+   tone(850,0.035,0.035);
   }
-  if(t<1){
+
+  if(progress<1){
    requestAnimationFrame(animate);
   }else{
+   angle=endAngle;
+   drawWheel();
+
    spinning=false;
-   document.getElementById("spin").disabled=false;
-   const arc=Math.PI*2/names.length;
-   let index=Math.floor((Math.PI*1.5-angle%(Math.PI*2)+Math.PI*2)%(Math.PI*2)/arc);
-   const winner=names[index];
-   document.getElementById("winner").textContent="🎉 PEMENANG: "+winner+" 🎉";
-   history.unshift(winner);
-   showHistory();
-   tone(523,.3);
-   setTimeout(()=>tone(659,.3),180);
-   setTimeout(()=>tone(784,.5),360);
+   winnersCount++;
+
+   document.getElementById("winnerName").textContent=winner;
+   document.getElementById("winnerBox").style.display="block";
+   document.getElementById("countdown").textContent=
+    "Nama akan dihapus dalam 10 detik";
+
+   winSound();
+
+   let remaining=10;
+   countdownTimer=setInterval(()=>{
+    remaining--;
+
+    if(remaining>0){
+     document.getElementById("countdown").textContent=
+      "Nama akan dihapus dalam "+remaining+" detik";
+    }else{
+     clearInterval(countdownTimer);
+
+     participants=participants.filter(name=>name!==winner);
+     updateInfo();
+
+     document.getElementById("countdown").textContent=
+      "Siap untuk putaran berikutnya 💗";
+
+     spinBtn.disabled=false;
+    }
+   },1000);
   }
  }
+
  requestAnimationFrame(animate);
 }
-function showHistory(){
- document.getElementById("history").innerHTML=history.length?
- history.map((n,i)=>`${i+1}. 🏆 ${n}`).join("<br>"):
- "Belum ada pemenang";
-}
-function resetHistory(){
- history=[];
- showHistory();
-}
-drawWheel();
-</script>
-</body>
-</html>
