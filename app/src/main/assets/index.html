@@ -29,8 +29,8 @@ canvas{width:100%;height:auto;display:block}
 }
 .spin{
  width:85%;max-width:280px;padding:17px;margin:15px auto;
- border:0;border-radius:35px;
- color:#fff;font-size:23px;font-weight:bold;
+ border:0;border-radius:35px;color:#fff;font-size:23px;
+ font-weight:bold;
  background:linear-gradient(120deg,#d6a8e8,#ef9fc8,#a9d8cd);
  box-shadow:0 7px 18px #b58ab966;
 }
@@ -74,7 +74,6 @@ textarea{
 
 <div class="card">
  <h3>💗 Pengaturan Peserta</h3>
- <p style="font-size:13px">Satu nama setiap baris. Urutan 3 nama pertama menjadi pemenang tetap.</p>
  <textarea id="names"></textarea>
  <br>
  <button class="secondary" onclick="applyNames()">Simpan Daftar Nama</button>
@@ -92,6 +91,8 @@ const originalNames=[
 "Evi","Hildan","Amel","Teh nay","Alfita","Pak eko"
 ];
 
+const fixedWinners=["Aluna","Hari","Caca"];
+
 const colors=[
 "#e8c9f4","#f8c7dd","#c9e9e0",
 "#ffe0bd","#c8def5","#f2d5e9",
@@ -100,7 +101,7 @@ const colors=[
 ];
 
 let participants=[...originalNames];
-let fixedQueue=originalNames.slice(0,3);
+let winnerCount=0;
 let angle=0;
 let spinning=false;
 let audio=null;
@@ -150,7 +151,6 @@ function drawWheel(){
  ctx.save();
  ctx.translate(350,350);
 
- // Lingkaran luar dan lampu
  ctx.beginPath();
  ctx.arc(0,0,337,0,Math.PI*2);
  ctx.fillStyle="#d4a8d7";
@@ -187,7 +187,6 @@ function drawWheel(){
   ctx.restore();
  }
 
- // Pusat roda
  ctx.beginPath();
  ctx.arc(0,0,57,0,Math.PI*2);
  ctx.fillStyle="#fff7fb";
@@ -211,64 +210,100 @@ function updateInfo(){
 
 function applyNames(){
  if(spinning)return;
+
  const list=document.getElementById("names").value
  .split("\n").map(x=>x.trim()).filter(Boolean);
 
- if(list.length<2){
-  alert("Masukkan minimal 2 nama!");
+ if(list.length<3){
+  alert("Masukkan minimal 3 nama!");
   return;
  }
+
  if(new Set(list).size!==list.length){
   alert("Ada nama yang sama. Periksa daftar peserta ya!");
   return;
  }
 
+ const missing=fixedWinners.filter(name=>!list.includes(name));
+
+ if(missing.length){
+  alert("Nama pemenang wajib tidak boleh dihapus: "+missing.join(", "));
+  document.getElementById("names").value=participants.join("\n");
+  return;
+ }
+
  participants=list;
- fixedQueue=list.slice(0,3);
+ winnerCount=0;
  angle=0;
+
  drawWheel();
  updateInfo();
- document.getElementById("winner").textContent="Daftar peserta berhasil disimpan 💗";
+
+ document.getElementById("winner").textContent=
+ "Daftar peserta berhasil disimpan 💗";
+
  document.getElementById("status").textContent=
- "3 pemenang pertama tetap, sisanya acak";
+ "Aluna, Hari, Caca tetap menjadi 3 pemenang pertama";
+ document.getElementById("spin").disabled=false;
 }
 
 function resetAll(){
  if(spinning)return;
+
  if(!confirm("Mulai ulang arisan dengan daftar nama awal?"))return;
+
  participants=[...originalNames];
- fixedQueue=originalNames.slice(0,3);
+ winnerCount=0;
  angle=0;
+
  drawWheel();
  updateInfo();
- document.getElementById("winner").textContent="Siapakah pemenang berikutnya? 💗";
- document.getElementById("status").textContent="Urutan pemenang diulang dari awal";
+
+ document.getElementById("winner").textContent=
+ "Siapakah pemenang berikutnya? 💗";
+
+ document.getElementById("status").textContent=
+ "Urutan pemenang diulang dari awal";
+
+ document.getElementById("spin").disabled=false;
 }
 
 function spinWheel(){
  if(spinning||participants.length===0)return;
 
  sound();
+
+ let winner;
+
+ if(winnerCount<3){
+  winner=fixedWinners[winnerCount];
+
+  if(!participants.includes(winner)){
+   alert("Nama pemenang wajib tidak ditemukan!");
+   return;
+  }
+ }else{
+  winner=participants[
+   Math.floor(Math.random()*participants.length)
+  ];
+ }
+
+ winnerCount++;
  spinning=true;
  document.getElementById("spin").disabled=true;
-
- // Tiga nama pertama tetap, sisanya acak
- let winner;
- if(fixedQueue.length>0){
-  winner=fixedQueue.shift();
- }else{
-  winner=participants[Math.floor(Math.random()*participants.length)];
- }
 
  const index=participants.indexOf(winner);
  const n=participants.length;
  const arc=Math.PI*2/n;
 
- // Posisi akhir agar nama pemenang tepat di bawah penunjuk
- const target=((Math.PI*2-(index+.5)*arc)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+ const target=(
+  (Math.PI*2-(index+.5)*arc)%(Math.PI*2)+Math.PI*2
+ )%(Math.PI*2);
+
  const current=((angle%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
- const extraTurns=5*Math.PI*2;
- const distance=extraTurns+((target-current+Math.PI*2)%(Math.PI*2));
+ const distance=5*Math.PI*2+
+ ((target-current+Math.PI*2)%(Math.PI*2));
+
  const start=angle;
  const duration=8000;
  const startTime=performance.now();
@@ -277,10 +312,12 @@ function spinWheel(){
  function animate(now){
   const t=Math.min((now-startTime)/duration,1);
   const ease=1-Math.pow(1-t,4);
+
   angle=start+distance*ease;
   drawWheel();
 
   const tick=Math.floor(angle/(Math.PI*2/n)*1.5);
+
   if(tick!==lastTick){
    tone(650,.045,"square",.025);
    lastTick=tick;
@@ -289,29 +326,45 @@ function spinWheel(){
   if(t<1){
    requestAnimationFrame(animate);
   }else{
-   // Hapus pemenang dari daftar aktif
-   participants=participants.filter(name=>name!==winner);
-   spinning=false;
-   drawWheel();
-   updateInfo();
-
    document.getElementById("winner").textContent=
    "🏆 SELAMAT! "+winner+" 🏆";
 
-   document.getElementById("status").textContent=
-   participants.length
-   ?"Pemenang telah dihapus dari daftar aktif 💗"
-   :"Semua peserta sudah mendapatkan giliran! 🎉";
+   let remaining=10;
 
-   // Suara kemenangan
+   document.getElementById("status").textContent=
+   "Nama akan dihapus dalam 10 detik";
+
    tone(523,.35,"sine",.1);
    setTimeout(()=>tone(659,.35,"sine",.1),200);
    setTimeout(()=>tone(784,.55,"sine",.1),400);
 
-   document.getElementById("spin").disabled=
-   participants.length===0;
+   const countdownTimer=setInterval(()=>{
+    remaining--;
+
+    if(remaining>0){
+     document.getElementById("status").textContent=
+     "Nama akan dihapus dalam "+remaining+" detik";
+    }else{
+     clearInterval(countdownTimer);
+
+     participants=participants.filter(name=>name!==winner);
+
+     drawWheel();
+     updateInfo();
+
+     document.getElementById("status").textContent=
+     participants.length
+     ?"Pemenang sudah dihapus. Siap untuk putaran berikutnya 💗"
+     :"Semua peserta sudah mendapatkan giliran! 🎉";
+
+     spinning=false;
+     document.getElementById("spin").disabled=
+     participants.length===0;
+    }
+   },1000);
   }
  }
+
  requestAnimationFrame(animate);
 }
 
