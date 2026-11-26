@@ -105,7 +105,7 @@ let angle=0;
 let spinning=false;
 let audio=null;
 let lastTick=-1;
-
+let winnersHistory=[];
 document.getElementById("names").value=originalNames.join("\n");
 
 function sound(){
@@ -206,7 +206,6 @@ function updateInfo(){
  "Sisa peserta: "+participants.length;
  document.getElementById("names").value=participants.join("\n");
 }
-
 function applyNames(){
  if(spinning)return;
 
@@ -219,31 +218,27 @@ function applyNames(){
  }
 
  if(new Set(list).size!==list.length){
-  alert("Ada nama yang sama. Periksa daftar peserta ya!");
+  alert("Ada nama yang sama!");
   return;
  }
 
- const missing=fixedWinners.filter(name=>!list.includes(name));
+ const blocked=[...fixedWinners.slice(0,winnerCount),...winnersHistory];
 
- if(missing.length){
-  alert("Nama pemenang wajib tidak boleh dihapus: "+missing.join(", "));
-  document.getElementById("names").value=participants.join("\n");
+ if(blocked.some(name=>list.includes(name))){
+  alert("Nama yang sudah menang tidak boleh dimasukkan kembali!");
   return;
  }
 
- participants=list;
- winnerCount=0;
- angle=0;
+ participants=list.filter(name=>!winnersHistory.includes(name));
 
  drawWheel();
  updateInfo();
 
  document.getElementById("winner").textContent=
- "Daftar peserta berhasil disimpan 💗";
+ "Daftar peserta berhasil diperbarui 💗";
 
  document.getElementById("status").textContent=
- "Aluna, Hari, Caca tetap menjadi 3 pemenang pertama";
- document.getElementById("spin").disabled=false;
+ "Daftar nama berhasil disimpan";
 }
 
 function resetAll(){
@@ -253,7 +248,8 @@ function resetAll(){
 
  participants=[...originalNames];
  winnerCount=0;
- angle=0;
+winnersHistory=[];
+angle=0;
 
  drawWheel();
  updateInfo();
@@ -288,8 +284,9 @@ function spinWheel(){
  }
 
  winnerCount++;
- spinning=true;
- document.getElementById("spin").disabled=true;
+winnersHistory.push(winner);
+spinning=true;
+document.getElementById("spin").disabled=true;
 
  const index=participants.indexOf(winner);
  const n=participants.length;
@@ -357,8 +354,11 @@ function spinWheel(){
      :"Semua peserta sudah mendapatkan giliran! 🎉";
 
      spinning=false;
-     document.getElementById("spin").disabled=
-     participants.length===0;
+document.getElementById("spin").disabled=
+participants.length===0;
+
+document.getElementById("spin").textContent=
+"PUTAR LAGI ✨";
     }
    },1000);
   }
