@@ -75,8 +75,8 @@ textarea{
  <h3>💗 Pengaturan Peserta</h3>
  <textarea id="names"></textarea>
  <br>
- <button class="secondary" onclick="applyNames()">Simpan Daftar Nama</button>
- <button class="secondary" onclick="resetAll()">Reset Arisan</button>
+<button class="secondary" onclick="applyNames()">Simpan Daftar Nama</button>
+<button class="secondary" onclick="resetAll()">Reset Arisan</button>
 </div>
 
 <div class="footer">Made with love 💕 Lucky Wheel Arisan</div>
@@ -128,7 +128,13 @@ function tone(freq,duration=.08,type="sine",volume=.05){
  osc.start();
  osc.stop(audio.currentTime+duration);
 }
-
+ function shuffleParticipants(){
+ for(let i=participants.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [participants[i],participants[j]]=
+  [participants[j],participants[i]];
+ }
+}
 function drawWheel(){
  const n=participants.length;
  ctx.clearRect(0,0,700,700);
@@ -251,6 +257,7 @@ function applyNames(){
  "Daftar nama berhasil disimpan";
 }
 
+ 
 function resetAll(){
  if(spinning)return;
 
@@ -260,7 +267,7 @@ function resetAll(){
  winnerCount=0;
 winnersHistory=[];
 angle=0;
-
+shuffleParticipants();
  drawWheel();
  updateInfo();
 
@@ -271,8 +278,8 @@ angle=0;
  "Urutan pemenang diulang dari awal";
 
  document.getElementById("spin").disabled=false;
+document.getElementById("spin").textContent="PUTAR ✨";
 }
-
 function spinWheel(){
  if(spinning||participants.length===0)return;
 
@@ -311,7 +318,7 @@ document.getElementById("spin").disabled=true;
  ((target-current+Math.PI*2)%(Math.PI*2));
 
  const start=angle;
- const duration=8000;
+ const duration=12000;
  const startTime=performance.now();
  lastTick=-1;
 
@@ -377,6 +384,7 @@ document.getElementById("spin").textContent=
  requestAnimationFrame(animate);
 }
 
+shuffleParticipants();
 drawWheel();
 updateInfo();
 </script>
